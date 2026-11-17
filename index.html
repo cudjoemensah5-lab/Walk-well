@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b2d">
+<meta name="description" content="WalkWell helps you track your walks, routes and progress.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WalkWell">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>WalkWell — Walking Tracker</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+:root{--navy:#101b2d;--navy2:#182943;--cream:#f5f1e8;--muted:#aebbd0;--gold:#d9b66f;--green:#79c99a;--red:#e58b83}
+*{box-sizing:border-box}body{margin:0;background:#0b1422;color:#f7f5ef;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:860px;margin:auto;padding:22px 16px 48px}.top{display:flex;justify-content:space-between;align-items:center;margin:8px 0 22px}
+.brand{font-weight:800;letter-spacing:.12em;font-size:13px}.brand span{color:var(--gold)}.tag{font-size:11px;color:var(--muted);border:1px solid #34445d;padding:7px 10px;border-radius:99px}
+h1{font-size:30px;line-height:1.05;margin:0 0 8px}.sub{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 20px}
+.card{background:linear-gradient(145deg,#192b45,#122035);border:1px solid #30445f;border-radius:22px;padding:19px;margin:15px 0;box-shadow:0 16px 40px #0003}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:800}.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat-tile{background:#0d1a2b;border:1px solid #253852;border-radius:15px;padding:14px}.stat-tile small{display:block;color:var(--muted);font-size:10px;letter-spacing:.08em}.stat-tile strong{display:block;font-size:22px;margin-top:6px}.stat-tile em{display:block;color:#9eacc0;font-size:10px;font-style:normal;margin-top:3px}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:12px}.eyebrow{font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.distance{font-size:52px;font-weight:800;letter-spacing:-.05em;margin:5px 0 0}.unit{font-size:16px;color:var(--muted);font-weight:600;letter-spacing:0}
+.pill{font-size:12px;color:var(--green);background:#244638;padding:8px 11px;border-radius:99px;white-space:nowrap}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.metric{background:#0d1a2b;border-radius:13px;padding:12px}.metric b{display:block;font-size:20px;margin-top:5px}.metric small{color:var(--muted);font-size:11px}
+.actions{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:9px;margin-top:17px}
+button{border:0;border-radius:13px;padding:14px 10px;font-weight:750;font-size:14px;cursor:pointer}
+.primary{background:var(--gold);color:#172033}.secondary{background:#263a55;color:#f7f5ef}.danger{background:#4b292b;color:#ffd9d4}
+button:disabled{opacity:.4;cursor:not-allowed}
+.section-title{font-size:16px;font-weight:750;margin:0 0 12px}.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #2a3d58;font-size:13px}.row:last-child{border:0}.muted{color:var(--muted)}
+.bar{height:9px;background:#0b1728;border-radius:20px;overflow:hidden;margin:12px 0 5px}.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:20px}
+#map{height:330px;width:100%;border-radius:14px;overflow:hidden;background:#dbe3e8;border:1px solid #34445d}
+.map-actions{display:flex;gap:8px;margin-top:10px}.map-actions button{min-width:0}.map-actions button:last-child{background:#d9b66f;color:#172033}.map-actions button{flex:1}
+.leaflet-container{font:12px system-ui,sans-serif}.leaflet-control-attribution{font-size:9px!important}
+.feed{max-height:190px;overflow:auto}.feed-item{font-size:12px;padding:9px 0;border-bottom:1px solid #2a3d58;color:#dbe4ef}.feed-item time{color:var(--muted);margin-right:8px}
+.notice{border-left:3px solid var(--gold);background:#29291f;color:#f4e9c8;padding:13px;border-radius:8px;font-size:12px;line-height:1.55}
+.alert{border-left:3px solid var(--red);background:#352326;color:#ffe0dc;padding:13px;border-radius:8px;font-size:12px;line-height:1.55}
+input{background:#0d1a2b;border:1px solid #34445d;border-radius:10px;color:white;padding:12px;width:100%;min-width:0}
+.route-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;color:var(--muted);font-size:11px;margin:0 0 6px}.field input{font-size:14px}.route-actions{display:flex;gap:8px;margin-top:12px}.route-actions button{flex:1}.destination-summary{display:flex;justify-content:space-between;gap:10px;padding:11px 0 0;font-size:12px;color:var(--muted)}.destination-summary strong{color:#f7f5ef;text-align:right}
+@media(max-width:430px){.route-fields{grid-template-columns:1fr}.route-actions{flex-direction:column}}
+footer{color:#8291a8;font-size:11px;line-height:1.5;text-align:center;margin-top:22px}
+@media(max-width:430px){main{padding:16px 12px 36px}.distance{font-size:44px}.metrics{grid-template-columns:repeat(3,1fr)}.metric{padding:10px 8px}.metric b{font-size:17px}.actions{grid-template-columns:1fr 1fr}.actions .primary{grid-column:span 2}.stat-grid{gap:7px}.stat-tile{padding:11px 9px}.stat-tile strong{font-size:18px}#map{height:290px}}
+
+#launchSplash{position:fixed;inset:0;z-index:99999;background:#07152d;display:flex;align-items:center;justify-content:center;opacity:1;visibility:visible;transition:opacity .55s ease,visibility .55s ease}
+#launchSplash img{width:100%;height:100%;object-fit:cover;object-position:center}
+#launchSplash.hide{opacity:0;visibility:hidden;pointer-events:none}
+@media(min-width:700px){#launchSplash img{max-width:460px;box-shadow:0 0 80px #0008}}
+</style>
+</head>
+<body>
+<div id="launchSplash" aria-label="Welcome to WalkWell">
+ <img src="./splash-wallpaper.png" alt="WalkWell welcome screen for Bless Mensah">
+</div>
+<main>
+ <div class="top"><div class="brand">WALK<span>WELL</span></div><div class="tag">PERSONAL WALK TRACKER</div></div>
+ <h1>Move at your pace.</h1>
+ <p class="sub">A calmer, smarter way to understand every walk. Track your route, build consistency and see your progress over time.</p>
+ <section class="stat-grid" aria-label="Your walking summary">
+  <div class="stat-tile"><small>THIS WEEK</small><strong id="weekkm">0.00 km</strong><em id="weekcount">0 walks recorded</em></div>
+  <div class="stat-tile"><small>ALL-TIME DISTANCE</small><strong id="allkm">0.00 km</strong><em id="allcount">0 completed walks</em></div>
+  <div class="stat-tile"><small>LONGEST WALK</small><strong id="bestwalk">0.00 km</strong><em>Personal best</em></div>
+ </section>
+
+ <section class="card">
+  <div class="hero"><div><div class="eyebrow">Distance covered</div><div class="distance" id="distance">0.00 <span class="unit">km</span></div></div><div class="pill" id="status">Ready to start</div></div>
+  <div class="metrics">
+   <div class="metric"><small>TIME</small><b id="time">00:00</b></div>
+   <div class="metric"><small>PACE</small><b id="pace">—</b></div>
+   <div class="metric"><small>GPS ACCURACY</small><b id="accuracy">—</b></div>
+  </div>
+  <div class="actions">
+   <button class="primary" id="start">Start walk</button>
+   <button class="secondary" id="pause" disabled>Pause</button>
+   <button class="danger" id="finish" disabled>Finish</button>
+  </div>
+  <div class="muted" style="font-size:11px;margin-top:12px" id="gpsnote">GPS permission is requested when you start. Keep this page open while tracking.</div>
+ </section>
+
+ <section class="card">
+  <div class="card-head"><div><div class="section-kicker">Plan your walk</div><div class="section-title" style="margin:3px 0 0">Choose your start and destination</div></div><span class="muted" style="font-size:11px">Before you begin</span></div>
+  <div class="route-fields">
+   <div class="field"><label for="originInput">STARTING LOCATION</label><input id="originInput" value="Madina, Accra, Ghana" placeholder="e.g. Madina"></div>
+   <div class="field"><label for="destinationInput">DESTINATION</label><input id="destinationInput" value="Dome, Accra, Ghana" placeholder="e.g. Dome"></div>
+  </div>
+  <div class="route-actions">
+   <button class="primary" id="setRoute">Set locations</button>
+   <button class="secondary" id="useGpsStart">Use my current location</button>
+  </div>
+  <div class="destination-summary"><span>Planned destination</span><strong id="destinationStatus">Not set yet</strong></div>
+  <div class="destination-summary"><span>Direct distance to destination</span><strong id="toDestination">—</strong></div>
+  <div class="muted" style="font-size:11px;margin-top:9px">Searches for places such as Madina, Dome, UPSA or Atomic Junction. The direct distance is an estimate, not walking directions. Your actual walked route is recorded by GPS.</div>
+ </section>
+
+ <section class="card">
+  <div class="card-head"><div><div class="section-kicker">On the map</div><div class="section-title" style="margin:3px 0 0">Your live route</div></div><div class="pill" id="mapstatus">Waiting for GPS</div></div>
+  <div id="map" role="img" aria-label="Live map showing your current GPS location and walking route"></div>
+  <div class="map-actions">
+   <button class="secondary" id="recenter">My location</button>
+   <button class="secondary" id="zoomroute">Show route</button>
+  </div>
+  <div class="muted" style="font-size:11px;margin-top:9px" id="placehint">Your position and route will appear here after you allow GPS access. Map labels and nearby surroundings need an internet connection.</div>
+ </section>
+
+ <section class="card">
+  <div class="hero"><div class="section-title">Your 5 km walk goal</div><div class="muted" id="goaltext">0% complete</div></div>
+  <div class="bar"><div id="goalbar"></div></div>
+  <div class="row"><span class="muted">Target distance</span><b>5.00 km</b></div>
+  <div class="row"><span class="muted">Distance remaining</span><b id="remaining">5.00 km</b></div>
+  <div class="row"><span class="muted">Equivalent distance</span><b id="miles">0.00 miles</b></div>
+  <div class="row"><span class="muted">Average speed</span><b id="speed">—</b></div>
+  <div class="row"><span class="muted">Kilometres completed</span><b id="splits">0</b></div>
+ </section>
+
+ <section class="card">
+  <div class="card-head"><div><div class="section-kicker">Your journey</div><div class="section-title" style="margin:3px 0 0">Activity timeline</div></div><span class="muted" style="font-size:11px">Live updates</span></div>
+  <div class="feed" id="feed"><div class="feed-item">Your GPS updates and walk events will appear here.</div></div>
+ </section>
+
+ <section class="card">
+  <div class="card-head"><div><div class="section-kicker">Your history</div><div class="section-title" style="margin:3px 0 0">Previous walks</div></div><span class="muted" style="font-size:11px">Saved on this device</span></div>
+  <div id="history" class="muted" style="font-size:13px">Your completed walks will be saved on this device.</div>
+  <div class="actions" style="grid-template-columns:1fr 1fr">
+   <button class="secondary" id="csv">Export history (CSV)</button>
+   <button class="secondary" id="clear">Clear history</button>
+  </div>
+ </section>
+
+ <div class="alert" style="margin-top:10px"><b>Stop and get help:</b> Stop walking if you develop chest pain/pressure, unusual or severe breathlessness, dizziness, faintness or unusual weakness. Severe symptoms need emergency medical care.</div>
+ <footer>GPS distance is an estimate and may vary with buildings, trees and signal quality. This page tracks only while open and active; it is not a medical device and does not guarantee background tracking. Your history is stored locally in this browser.</footer>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const $=id=>document.getElementById(id);
+let watchId=null, running=false, paused=false, points=[], meters=0, startAt=0, elapsedBefore=0, tick=null, wakeLock=null, lastLog=0;
+let map=null, userMarker=null, routeLine=null, accuracyCircle=null, lastLatLng=null, completedKm=0, splitTimes=[], originPoint=null, destinationPoint=null, originMarker=null, destinationMarker=null, guideLine=null;
+const KEY='walkwell_history_v1';
+function initMap(){
+ if(!window.L){$('mapstatus').textContent='Map library unavailable';$('placehint').textContent='Connect to the internet and reload to load the map.';return}
+ map=L.map('map',{zoomControl:true}).setView([5.6037,-0.1870],12);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+   maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+ }).addTo(map);
+ routeLine=L.polyline([],{color:'#176b55',weight:5,opacity:.9}).addTo(map);
+}
+function fmtTime(s){s=Math.max(0,Math.floor(s));let h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return h?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function elapsed(){return elapsedBefore+(running&&!paused?(Date.now()-startAt)/1000:0)}
+function log(msg){let d=document.createElement('div');d.className='feed-item';let t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});d.innerHTML=`<time>${t}</time>${msg}`;$('feed').prepend(d)}
+function update(){
+ let km=meters/1000, secs=elapsed(), pace=km>0.03?secs/60/km:null;
+ $('distance').innerHTML=`${km.toFixed(2)} <span class="unit">km</span>`;
+ $('time').textContent=fmtTime(secs);
+ $('pace').textContent=pace&&isFinite(pace)?`${Math.floor(pace)}:${String(Math.round((pace%1)*60)).padStart(2,'0')}`:'—';
+ $('miles').textContent=(km*0.621371).toFixed(2)+' miles';
+ $('speed').textContent=secs>30&&km>0.02?(km/(secs/3600)).toFixed(1)+' km/h':'—';
+ $('splits').textContent=String(Math.floor(km));
+ $('remaining').textContent=Math.max(0,5-km).toFixed(2)+' km';
+ let pct=Math.min(100,km/5*100);$('goalbar').style.width=pct+'%';$('goaltext').textContent=Math.round(pct)+'% complete';
+}
+function distance(a,b){const R=6371000,rad=x=>x*Math.PI/180;let dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon),x=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function onPosition(pos){
+ const c=pos.coords, p={lat:c.latitude,lon:c.longitude,acc:c.accuracy,ts:pos.timestamp};
+ $('accuracy').textContent=Math.round(c.accuracy)+' m';
+ if(map && c.accuracy<=100){
+   const ll=[p.lat,p.lon];lastLatLng=ll;
+   if(!userMarker){userMarker=L.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:'#176b55',fillOpacity:1}).addTo(map).bindPopup('Your current location');map.setView(ll,16)}
+   else userMarker.setLatLng(ll);
+   if(accuracyCircle)accuracyCircle.setLatLng(ll).setRadius(Math.min(c.accuracy,1000));
+   else accuracyCircle=L.circle(ll,{radius:Math.min(c.accuracy,1000),color:'#176b55',weight:1,fillColor:'#79c99a',fillOpacity:.12}).addTo(map);
+   $('mapstatus').textContent='Location updated';
+   if(destinationPoint){let remaining=distance({lat:p.lat,lon:p.lon},destinationPoint);$('toDestination').textContent=remaining>=1000?(remaining/1000).toFixed(2)+' km':Math.round(remaining)+' m';if(remaining<100){$('destinationStatus').textContent='You are near your destination';}}
+   $('placehint').textContent=`Current GPS accuracy: about ${Math.round(c.accuracy)} metres. Blue/green dot marks your phone; the line shows your recorded route.`;
+ }
+ if(c.accuracy>50){$('gpsnote').textContent='GPS accuracy is low. Move to a more open area if possible; noisy readings are being ignored.';return}
+ if(points.length){let prev=points[points.length-1],d=distance(prev,p),dt=(p.ts-prev.ts)/1000;
+   // Reject implausible jumps and tiny GPS drift.
+   if(d>2 && d<Math.max(80,dt*4)){meters+=d;points.push(p);if(routeLine)routeLine.addLatLng([p.lat,p.lon]);let newKm=Math.floor(meters/1000);if(newKm>completedKm){completedKm=newKm;splitTimes.push({km:newKm,seconds:elapsed()});log(`Milestone · ${newKm} kilometre${newKm===1?'':'s'} completed.`)}if(p.ts-lastLog>15000){log(`GPS update · +${d.toFixed(0)} m · total ${(meters/1000).toFixed(2)} km`);lastLog=p.ts}}
+   else if(d>=Math.max(80,dt*4)){log('GPS jump ignored to protect distance accuracy.')}
+ } else {points.push(p);log('GPS signal acquired. Your walk is being tracked.')}
+ update();
+}
+async function geocodePlace(query){
+ const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(query);
+ const response=await fetch(url,{headers:{'Accept':'application/json'}});
+ if(!response.ok)throw new Error('Place search is temporarily unavailable.');
+ const results=await response.json();
+ if(!results.length)throw new Error('Could not find "'+query+'". Try adding Accra, Ghana.');
+ return {lat:Number(results[0].lat),lon:Number(results[0].lon),label:results[0].display_name};
+}
+function paintPlannedLocations(){
+ if(!map)return;
+ if(originMarker)map.removeLayer(originMarker);
+ if(destinationMarker)map.removeLayer(destinationMarker);
+ if(guideLine)map.removeLayer(guideLine);
+ if(originPoint)originMarker=L.marker([originPoint.lat,originPoint.lon]).addTo(map).bindPopup('Planned starting location');
+ if(destinationPoint)destinationMarker=L.marker([destinationPoint.lat,destinationPoint.lon]).addTo(map).bindPopup('Your destination');
+ if(originPoint&&destinationPoint){
+   guideLine=L.polyline([[originPoint.lat,originPoint.lon],[destinationPoint.lat,destinationPoint.lon]],{color:'#d9b66f',weight:3,dashArray:'7 9',opacity:.9}).addTo(map);
+   map.fitBounds(guideLine.getBounds().pad(.2));
+   let d=distance(originPoint,destinationPoint);
+   $('toDestination').textContent=d>=1000?(d/1000).toFixed(2)+' km direct':Math.round(d)+' m direct';
+ }
+}
+async function setPlannedRoute(){
+ const from=$('originInput').value.trim(),to=$('destinationInput').value.trim();
+ if(!from||!to){alert('Enter both a starting location and a destination.');return}
+ $('setRoute').disabled=true;$('setRoute').textContent='Searching…';
+ try{
+   const [a,b]=await Promise.all([geocodePlace(from),geocodePlace(to)]);
+   originPoint=a;destinationPoint=b;paintPlannedLocations();
+   $('destinationStatus').textContent=b.label.split(',').slice(0,2).join(',');
+   $('placehint').textContent='Gold dashed line = direct guide between your selected places. Your actual GPS track will be shown separately while walking.';
+   log('Walk planned · '+from+' to '+to+'.');
+ }catch(e){alert(e.message)}
+ finally{$('setRoute').disabled=false;$('setRoute').textContent='Set locations'}
+}
+async function useGpsAsStart(){
+ if(!navigator.geolocation){alert('This browser does not support GPS.');return}
+ if(!window.isSecureContext){alert('GPS requires an HTTPS website.');return}
+ $('useGpsStart').disabled=true;$('useGpsStart').textContent='Finding you…';
+ navigator.geolocation.getCurrentPosition(async pos=>{
+   originPoint={lat:pos.coords.latitude,lon:pos.coords.longitude,label:'Your current GPS location'};
+   $('originInput').value='My current location';
+   try{
+     const b=await geocodePlace($('destinationInput').value.trim());
+     destinationPoint=b;paintPlannedLocations();
+     $('destinationStatus').textContent=b.label.split(',').slice(0,2).join(',');
+     $('placehint').textContent='Starting pin is your current GPS position. Gold dashed line is a direct guide, not walking directions.';
+   }catch(e){alert(e.message)}
+   $('useGpsStart').disabled=false;$('useGpsStart').textContent='Use my current location';
+ },e=>{$('useGpsStart').disabled=false;$('useGpsStart').textContent='Use my current location';geoError(e)},{enableHighAccuracy:true,timeout:15000});
+}
+function start(){
+ if(!running){meters=0;points=[];elapsedBefore=0;completedKm=0;splitTimes=[];lastLog=0;if(routeLine)routeLine.setLatLngs([]);$('feed').innerHTML='';update()}
+ if(!('geolocation' in navigator)){alert('This browser does not support GPS location. Try Chrome on your phone.');return}
+ if(!window.isSecureContext){alert('GPS requires a secure page (HTTPS). Open this app using an HTTPS address.');return}
+ $('start').disabled=true;$('status').textContent='Finding GPS…';$('gpsnote').textContent='Allow location access when your browser asks.';
+ navigator.geolocation.getCurrentPosition(pos=>{
+   if(!running){onPosition(pos);running=true;paused=false;startAt=Date.now();watchId=navigator.geolocation.watchPosition(onPosition,geoError,{enableHighAccuracy:true,maximumAge:1000,timeout:15000});tick=setInterval(update,1000);$('pause').disabled=false;$('finish').disabled=false;$('pause').textContent='Pause';$('status').textContent='Tracking';log('Walk started.');keepAwake();}
+ },geoError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+}
+function geoError(e){$('start').disabled=false;$('status').textContent='GPS unavailable';let msg=e.code===1?'Location permission denied. Enable location permission for this site.':e.code===2?'GPS position unavailable. Check phone location settings.':'GPS timed out. Try again in an open area.';$('gpsnote').textContent=msg;log(msg)}
+async function keepAwake(){try{if('wakeLock'in navigator)wakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
+function pause(){
+ if(!running)return;
+ if(!paused){elapsedBefore=elapsed();paused=true;if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=null;$('pause').textContent='Resume';$('status').textContent='Paused';log('Walk paused.');}
+ else {paused=false;startAt=Date.now();watchId=navigator.geolocation.watchPosition(onPosition,geoError,{enableHighAccuracy:true,maximumAge:1000,timeout:15000});$('pause').textContent='Pause';$('status').textContent='Tracking';log('Walk resumed.');keepAwake();}
+ update();
+}
+function finish(){
+ if(!running)return;
+ let secs=elapsed(),km=meters/1000;
+ if(watchId!==null)navigator.geolocation.clearWatch(watchId);clearInterval(tick);running=false;paused=false;
+ if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}
+ let record={date:new Date().toISOString(),km,seconds:secs,miles:km*.621371,points:points.length,route:points.map(p=>[p.lat,p.lon]),splits:splitTimes};
+ let hist=JSON.parse(localStorage.getItem(KEY)||'[]');hist.unshift(record);localStorage.setItem(KEY,JSON.stringify(hist.slice(0,100)));
+ log(`Walk saved · ${km.toFixed(2)} km · ${fmtTime(secs)}.`);
+ $('start').disabled=false;$('pause').disabled=true;$('finish').disabled=true;$('status').textContent='Walk saved';$('gpsnote').textContent='Walk complete. Your session is saved on this device.';renderHistory();
+}
+function renderHistory(){
+ let h=JSON.parse(localStorage.getItem(KEY)||'[]');
+ $('history').innerHTML=h.length?h.slice(0,15).map((x,i)=>`<div class="row"><span>${new Date(x.date).toLocaleDateString()} · ${new Date(x.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span><b>${x.km.toFixed(2)} km · ${fmtTime(x.seconds)}</b></div>`).join(''):'No walks saved yet.';
+ let now=new Date(),weekStart=new Date(now);weekStart.setHours(0,0,0,0);weekStart.setDate(now.getDate()-((now.getDay()+6)%7));
+ let weekly=h.filter(x=>new Date(x.date)>=weekStart),wk=weekly.reduce((a,x)=>a+x.km,0),total=h.reduce((a,x)=>a+x.km,0),best=h.reduce((a,x)=>Math.max(a,x.km),0);
+ $('weekkm').textContent=wk.toFixed(2)+' km';$('weekcount').textContent=weekly.length+' walk'+(weekly.length===1?'':'s')+' recorded';
+ $('allkm').textContent=total.toFixed(2)+' km';$('allcount').textContent=h.length+' completed walk'+(h.length===1?'':'s');
+ $('bestwalk').textContent=best.toFixed(2)+' km';
+}
+$('start').onclick=start;$('pause').onclick=pause;$('finish').onclick=finish;$('setRoute').onclick=setPlannedRoute;$('useGpsStart').onclick=useGpsAsStart;
+$('recenter').onclick=()=>{if(map&&lastLatLng)map.setView(lastLatLng,17);else log('No GPS position yet. Start a walk and allow location access.')};
+$('zoomroute').onclick=()=>{if(map&&routeLine&&routeLine.getLatLngs().length>1)map.fitBounds(routeLine.getBounds().pad(.18));else if(map&&lastLatLng)map.setView(lastLatLng,16);else log('Your route will appear after GPS starts recording.')};
+$('csv').onclick=()=>{let h=JSON.parse(localStorage.getItem(KEY)||'[]');if(!h.length){alert('No history to export yet.');return}let rows=[['Date','Distance km','Distance miles','Duration seconds','GPS points'],...h.map(x=>[x.date,x.km.toFixed(3),x.miles.toFixed(3),Math.round(x.seconds),x.points])];let csv=rows.map(r=>r.join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='walkwell-history.csv';a.click();URL.revokeObjectURL(a.href)};
+$('clear').onclick=()=>{if(confirm('Delete all saved walking sessions from this browser?')){localStorage.removeItem(KEY);renderHistory()}};
+$('history').addEventListener('click',()=>{});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running&&!paused)keepAwake()});
+initMap();renderHistory();update();
+</script>
+
+<script>
+(function(){
+ const splash=document.getElementById('launchSplash');
+ window.addEventListener('load',()=>setTimeout(()=>splash&&splash.classList.add('hide'),2600));
+ if('serviceWorker' in navigator && location.protocol!=='file:'){
+   window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+ }
+})();
+</script>
+
+</body></html>
